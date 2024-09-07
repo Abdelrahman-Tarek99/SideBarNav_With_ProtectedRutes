@@ -1,8 +1,8 @@
-import * as React from "react";
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'; // Import FontAwesomeIcon component
-import { library } from '@fortawesome/fontawesome-svg-core'; // Manage your icons
-import { fas } from '@fortawesome/free-solid-svg-icons'; // Import all solid icons
+import React, { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom"; // Import useNavigate
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"; // Import FontAwesomeIcon component
+import { library } from "@fortawesome/fontawesome-svg-core"; // Manage your icons
+import { fas } from "@fortawesome/free-solid-svg-icons"; // Import all solid icons
 import Box from "@mui/material/Box";
 import Drawer from "@mui/material/Drawer";
 import Button from "@mui/material/Button";
@@ -13,15 +13,13 @@ import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import { DrawerNavProps } from "./SideBar.types";
-
-
-// Add all solid icons to the library
 library.add(fas);
 
-export default function DrawerNav({ routes }:DrawerNavProps) {
-  console.log(routes);
-  const [open, setOpen] = React.useState(false);
-  const navigate = useNavigate(); // Hook for navigation
+export default function DrawerNav({ routes }: DrawerNavProps) {
+  const location = useLocation();
+  console.log(location.pathname);
+  const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
 
   const toggleDrawer = (newOpen: boolean) => () => {
     setOpen(newOpen);
@@ -32,7 +30,7 @@ export default function DrawerNav({ routes }:DrawerNavProps) {
     setOpen(false); // Close drawer upon navigation
   };
 
- // This array should come from your routes configuration
+  // This array should come from your routes configuration
 
   const DrawerList = (
     <Box sx={{ width: 250 }} role="presentation">
@@ -40,23 +38,38 @@ export default function DrawerNav({ routes }:DrawerNavProps) {
         {routes.map((route, index) => (
           <React.Fragment key={`${route.pageTitle}-${index}`}>
             <ListItem disablePadding>
-              <ListItemButton onClick={() => handleNavigate(route.url)}>
+              <ListItemButton
+                onClick={() => handleNavigate(route.url)}
+                sx={{
+                  borderLeft:
+                    route.url === location.pathname ? "4px solid blue" : "none",
+                }}
+              >
                 <ListItemIcon>
                   <FontAwesomeIcon icon={route.icon} />
                 </ListItemIcon>
                 <ListItemText primary={route.text} />
               </ListItemButton>
             </ListItem>
-            {route.children && route.children.map(child => (
-              <ListItem key={child.pageTitle} disablePadding sx={{ pl: 4 }}>
-                <ListItemButton onClick={() => handleNavigate(child.url)}>
-                  <ListItemIcon>
-                    <FontAwesomeIcon icon={child.icon} />
-                  </ListItemIcon>
-                  <ListItemText primary={child.text} />
-                </ListItemButton>
-              </ListItem>
-            ))}
+            {route.children &&
+              route.children.map((child) => (
+                <ListItem key={child.pageTitle} disablePadding sx={{ pl: 4 }}>
+                  <ListItemButton
+                    onClick={() => handleNavigate(child.url)}
+                    sx={{
+                      borderLeft:
+                        child.url === location.pathname
+                          ? "4px solid blue"
+                          : "none", // Apply same styling for children
+                    }}
+                  >
+                    <ListItemIcon>
+                      <FontAwesomeIcon icon={child.icon} />
+                    </ListItemIcon>
+                    <ListItemText primary={child.text} />
+                  </ListItemButton>
+                </ListItem>
+              ))}
             <Divider />
           </React.Fragment>
         ))}
