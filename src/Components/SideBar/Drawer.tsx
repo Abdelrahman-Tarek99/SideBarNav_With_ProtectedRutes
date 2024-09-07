@@ -1,88 +1,94 @@
-import React, { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom"; // Import useNavigate
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"; // Import FontAwesomeIcon component
-import { library } from "@fortawesome/fontawesome-svg-core"; // Manage your icons
-import { fas } from "@fortawesome/free-solid-svg-icons"; // Import all solid icons
-import Box from "@mui/material/Box";
-import Drawer from "@mui/material/Drawer";
-import Button from "@mui/material/Button";
-import List from "@mui/material/List";
-import Divider from "@mui/material/Divider";
-import ListItem from "@mui/material/ListItem";
-import ListItemButton from "@mui/material/ListItemButton";
-import ListItemIcon from "@mui/material/ListItemIcon";
-import ListItemText from "@mui/material/ListItemText";
+import { Fragment, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { IoMdMenu } from "react-icons/io"; // Importing a menu icon from react-icons
 import { DrawerNavProps } from "./SideBar.types";
-library.add(fas);
+import { getIconComponent } from "../shared/utils";
 
-export default function DrawerNav({ routes }: DrawerNavProps) {
-  const location = useLocation();
-  console.log(location.pathname);
-  const [open, setOpen] = useState(false);
+function DrawerNav({ routes }: DrawerNavProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [expanded, setExpanded] = useState(new Set()); // Tracks expanded menu items
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const toggleDrawer = (newOpen: boolean) => () => {
-    setOpen(newOpen);
-  };
+  const toggleDrawer = () => setIsOpen(!isOpen);
 
   const handleNavigate = (url: string) => {
     navigate(url);
-    setOpen(false); // Close drawer upon navigation
+    setIsOpen(false);
   };
 
-  // This array should come from your routes configuration
-
-  const DrawerList = (
-    <Box sx={{ width: 250 }} role="presentation">
-      <List>
-        {routes.map((route, index) => (
-          <React.Fragment key={`${route.pageTitle}-${index}`}>
-            <ListItem disablePadding>
-              <ListItemButton
-                onClick={() => handleNavigate(route.url)}
-                sx={{
-                  borderLeft:
-                    route.url === location.pathname ? "4px solid blue" : "none",
-                }}
-              >
-                <ListItemIcon>
-                  <FontAwesomeIcon icon={route.icon} />
-                </ListItemIcon>
-                <ListItemText primary={route.text} />
-              </ListItemButton>
-            </ListItem>
-            {route.children &&
-              route.children.map((child) => (
-                <ListItem key={child.pageTitle} disablePadding sx={{ pl: 4 }}>
-                  <ListItemButton
-                    onClick={() => handleNavigate(child.url)}
-                    sx={{
-                      borderLeft:
-                        child.url === location.pathname
-                          ? "4px solid blue"
-                          : "none", // Apply same styling for children
-                    }}
-                  >
-                    <ListItemIcon>
-                      <FontAwesomeIcon icon={child.icon} />
-                    </ListItemIcon>
-                    <ListItemText primary={child.text} />
-                  </ListItemButton>
-                </ListItem>
-              ))}
-            <Divider />
-          </React.Fragment>
-        ))}
-      </List>
-    </Box>
-  );
+  const toggleExpand = (url: string) => {
+    const newExpanded = new Set(expanded);
+    if (newExpanded.has(url)) {
+      newExpanded.delete(url);
+    } else {
+      newExpanded.add(url);
+    }
+    setExpanded(newExpanded);
+  };
 
   return (
-    <div>
-      <Button onClick={toggleDrawer(true)}>Open drawer</Button>
-      <Drawer open={open} onClose={toggleDrawer(false)}>
-        {DrawerList}
-      </Drawer>
+    <div className="relative">
+      <button onClick={toggleDrawer} className="p-2 text-2xl">
+        <IoMdMenu />
+      </button>
+
+      <div
+        className={`fixed top-0 left-0 z-40 w-64 h-full bg-white transform ${
+          isOpen ? "translate-x-0" : "-translate-x-full"
+        } transition-transform duration-300 ease-in-out shadow-lg`}
+      >
+        <div className="flex flex-col">
+          {routes.map((route, index) => (
+            <Fragment key={index}>
+              <button
+                className={`flex items-center p-4 text-left text-lg ${
+                  route.url === location.pathname
+                    ? "border-l-4 border-blue-500"
+                    : ""
+                }`}
+                onClick={() => {
+                  handleNavigate(route.url);
+                  toggleExpand(route.url);
+                }}
+              >
+                {getIconComponent(route.icon)}{" "}
+                <span className="ml-2">{route.text}</span>
+              </button>
+              {route.children && (
+                <div
+                  className={`pl-8 ${
+                    expanded.has(route.url) ? "block" : "hidden"
+                  }`}
+                >
+                  {route.children.map((child, childIndex) => (
+                    <button
+                      key={childIndex}
+                      className={`flex items-center p-4 text-left text-lg ${
+                        child.url === location.pathname
+                          ? "border-l-4 border-blue-500"
+                          : ""
+                      }`}
+                      onClick={() => handleNavigate(child.url)}
+                    >
+                      {getIconComponent(child.icon)}{" "}
+                      <span className="ml-2">{child.text}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </Fragment>
+          ))}
+        </div>
+      </div>
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black bg-opacity-50"
+          onClick={() => setIsOpen(false)}
+        ></div>
+      )}
     </div>
   );
 }
+
+export default DrawerNav;
