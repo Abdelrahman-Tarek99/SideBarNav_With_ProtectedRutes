@@ -3,28 +3,26 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { IoMdMenu } from "react-icons/io"; // Importing a menu icon from react-icons
 import { DrawerNavProps } from "./SideBar.types";
 import { getIconComponent } from "../shared/utils";
+import {
+  Accordion,
+  AccordionItem,
+  AccordionTrigger,
+  AccordionContent,
+} from "../UI/Accordion/accordion";
 
 function DrawerNav({ routes }: DrawerNavProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [expanded, setExpanded] = useState(new Set()); // Tracks expanded menu items
   const navigate = useNavigate();
   const location = useLocation();
 
   const toggleDrawer = () => setIsOpen(!isOpen);
 
-  const handleNavigate = (url: string) => {
-    navigate(url);
-    setIsOpen(false);
-  };
-
-  const toggleExpand = (url: string) => {
-    const newExpanded = new Set(expanded);
-    if (newExpanded.has(url)) {
-      newExpanded.delete(url);
-    } else {
-      newExpanded.add(url);
+  const handleNavigate = (url: string, hasChildren = false) => {
+    if (!hasChildren) {
+      // Prevent navigation if there are children to show in the accordion
+      navigate(url);
     }
-    setExpanded(newExpanded);
+    // Optionally toggle drawer or expand logic here if needed
   };
 
   return (
@@ -41,41 +39,49 @@ function DrawerNav({ routes }: DrawerNavProps) {
         <div className="flex flex-col">
           {routes.map((route, index) => (
             <Fragment key={index}>
-              <button
-                className={`flex items-center p-4 text-left text-lg ${
-                  route.url === location.pathname
-                    ? "border-l-4 border-blue-500"
-                    : ""
-                }`}
-                onClick={() => {
-                  handleNavigate(route.url);
-                  toggleExpand(route.url);
-                }}
-              >
-                {getIconComponent(route.icon)}{" "}
-                <span className="ml-2">{route.text}</span>
-              </button>
-              {route.children && (
-                <div
-                  className={`pl-8 ${
-                    expanded.has(route.url) ? "block" : "hidden"
-                  }`}
+              {route.children ? (
+                <Accordion
+                  type="single"
+                  collapsible
+                  className="
+                flex items-center justify-start pl-6 text-left text-lg
+                "
                 >
-                  {route.children.map((child, childIndex) => (
-                    <button
-                      key={childIndex}
-                      className={`flex items-center p-4 text-left text-lg ${
-                        child.url === location.pathname
-                          ? "border-l-4 border-blue-500"
-                          : ""
-                      }`}
-                      onClick={() => handleNavigate(child.url)}
-                    >
-                      {getIconComponent(child.icon)}{" "}
-                      <span className="ml-2">{child.text}</span>
-                    </button>
-                  ))}
-                </div>
+                  <AccordionItem value={route.url}>
+                    <AccordionTrigger>
+                      {getIconComponent(route.icon)}{" "}
+                      <span className="ml-2">{route.text}</span>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      {route.children.map((child, childIndex) => (
+                        <button
+                          key={childIndex}
+                          className={`flex items-center justify-start p-4 pl-6 text-left text-lg ${
+                            child.url === location.pathname
+                              ? "border-l-4 border-blue-500"
+                              : ""
+                          }`}
+                          onClick={() => handleNavigate(child.url)}
+                        >
+                          {getIconComponent(child.icon)}{" "}
+                          <span className="ml-2">{child.text}</span>
+                        </button>
+                      ))}
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              ) : (
+                <button
+                  className={`flex items-center p-4 text-left text-lg ${
+                    route.url === location.pathname
+                      ? "border-l-4 border-blue-500"
+                      : ""
+                  }`}
+                  onClick={() => handleNavigate(route.url)}
+                >
+                  {getIconComponent(route.icon)}{" "}
+                  <span className="ml-2">{route.text}</span>
+                </button>
               )}
             </Fragment>
           ))}
