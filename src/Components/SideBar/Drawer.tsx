@@ -44,13 +44,15 @@ function DrawerNav({ routes }: DrawerNavProps) {
                   type="single"
                   collapsible
                   className="
-                flex items-center justify-start pl-6 text-left text-lg
+                flex items-center justify-between px-4 text-left text-lg w-full
                 "
                 >
                   <AccordionItem value={route.url}>
                     <AccordionTrigger>
-                      {getIconComponent(route.icon)}{" "}
-                      <span className="ml-2">{route.text}</span>
+                      <div className=" flex items-center">
+                        {getIconComponent(route.icon)}{" "}
+                        <span className="ml-2">{route.text}</span>
+                      </div>
                     </AccordionTrigger>
                     <AccordionContent>
                       {route.children.map((child, childIndex) => (
